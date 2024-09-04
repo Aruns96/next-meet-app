@@ -1,18 +1,10 @@
 
 import MeetupList from "../components/meetups/MeetupList"
+import { MongoClient } from "mongodb"
 
 
-const DUMMY_MEETUPS = [
-  {id:"m1",title:"1 meetup",image:"https://www.tourmyindia.com/blog//wp-content/uploads/2020/11/Taj-Mahal-Agra-feature.jpg",address:"address 1"
-    ,description:"The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan (reigned from 1628 to 1658), to house the tomb of his favourite wife, Mumtaz Mahal."
-  },
-  {
-    id:"m2",title:"2 meetup",image:"https://www.tourmyindia.com/blog//wp-content/uploads/2020/11/Taj-Mahal-Agra-feature.jpg",address:"address 2"
-    ,description:"The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan (reigned from 1628 to 1658), to house the tomb of his favourite wife, Mumtaz Mahal."
-  }
-]
 const HomePage = (props) => {
-  
+ 
   
   return (
    
@@ -31,11 +23,24 @@ const HomePage = (props) => {
 // }
 
 export async function getStaticProps() {
+  const client = await MongoClient.connect("mongodb+srv://arun509577:wsnoxAMV45YyMeWQ@cluster0.uzzlxdg.mongodb.net/meetups?retryWrites=true&w=majority&appName=Cluster")
+  const db = client.db()
+
+  const meetupCollection =  db.collection('meetups');
+  const result = await meetupCollection.find().toArray()
+  //console.log(result)
+  client.close();
   return {
     props:{
-      meetups : DUMMY_MEETUPS
+      meetups : result.map(m=>({
+        title:m.title,
+        image:m.image,
+        address:m.address,
+        description:m.description,
+        id:m._id.toString()
+      }))
     },
-    revalidate:10
+    revalidate:1
   }
 }
 
