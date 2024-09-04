@@ -1,29 +1,32 @@
-
+import { MongoClient,ObjectId } from "mongodb"
 import MeetupDetail from "../../components/meetups/MeetupDetail"
 
 const MeetupDetails = (props) => {
   return (
      <MeetupDetail
-      image="https://www.tourmyindia.com/blog//wp-content/uploads/2020/11/Taj-Mahal-Agra-feature.jpg" 
-      title="1 meetup" 
-      address="address 1" 
-      description="The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan (reigned from 1628 to 1658), to house the tomb of his favourite wife, Mumtaz Mahal." />
+      image={props.meetUpData.image} 
+      title={props.meetUpData.title}
+      address={props.meetUpData.address}
+      description={props.meetUpData.description} />
   )
 }
 
 export async function getStaticPaths() {
+
+  const client = await MongoClient.connect("mongodb+srv://arun509577:wsnoxAMV45YyMeWQ@cluster0.uzzlxdg.mongodb.net/meetups?retryWrites=true&w=majority&appName=Cluster")
+  const db = client.db()
+  const meetupCollection =  db.collection('meetups');
+  const meetups = await meetupCollection.find({},{_id:1}).toArray();
+  client.close()
+
   return {
    
-    paths:[
-      {
-        params:{
-          meetupId :"m1",
-        },
-        params:{
-          meetupId :"m2",
-        }
+    paths:meetups.map(m=>({
+      params:{
+        meetupId:m._id.toString()
       }
-    ],
+    }))
+    ,
     fallback:false
   }
 }
@@ -31,17 +34,21 @@ export async function getStaticProps(context) {
       
   const meetupId = context.params.meetupId;
    console.log(meetupId)
+   const client = await MongoClient.connect("mongodb+srv://arun509577:wsnoxAMV45YyMeWQ@cluster0.uzzlxdg.mongodb.net/meetups?retryWrites=true&w=majority&appName=Cluster")
+  const db = client.db()
+  const meetupCollection =  db.collection('meetups');
+  const selectedMeetup = await meetupCollection.findOne({_id:new ObjectId(meetupId)})
 
   return {
     props:{
       meetUpData:{
-        id:meetupId,
-        image:"https://www.tourmyindia.com/blog//wp-content/uploads/2020/11/Taj-Mahal-Agra-feature.jpg" ,
-        title:"1 meetup",
-         address:"address 1" ,
-         description:"The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan (reigned from 1628 to 1658), to house the tomb of his favourite wife, Mumtaz Mahal." 
-      }
+        id:selectedMeetup._id.toString(),
+        title:selectedMeetup.title,
+        image:selectedMeetup.image,
+        address:selectedMeetup.address,
+        description:selectedMeetup.description
     }
+  }
   }
 }
 
